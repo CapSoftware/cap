@@ -35,6 +35,8 @@ use winit::monitor::{MonitorHandle, VideoMode};
 
 
 fn main() {    
+    tauri_plugin_deep_link::prepare("so.cap.desktop");
+
     let _ = fix_path_env::fix();
     
     std::panic::set_hook(Box::new(|info| {
@@ -297,6 +299,15 @@ fn main() {
 
                 tray_handle.set_menu(new_menu).expect("Error while updating the tray menu items");
             });
+
+            let app_handle = app.handle();
+            if let Err(err) = tauri_plugin_deep_link::listen(move |request| {
+                if let Err(err) = app_handle.emit_all("deep-link-triggered", Some(request)) {
+                    eprintln!("Error while emitting deep-link event: {:?}", err);
+                }
+            }) {
+                eprintln!("Failed to setup deep-link listener. Some functionality such as the official Raycast(TM) extension will not be available: {:?}", err);
+            }
 
             Ok(())
         })
