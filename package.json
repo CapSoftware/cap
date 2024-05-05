@@ -6,7 +6,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "db:push": "dotenv -e .env -- pnpm --dir packages/database db:push",
     "db:generate": "dotenv -e .env -- pnpm --dir packages/database db:generate",
-    "tauri:build": "dotenv -e .env -- pnpm --dir apps/desktop tauri build --target universal-apple-darwin"
+    "tauri:build": "dotenv -e .env -- pnpm --dir apps/desktop tauri build --target universal-apple-darwin",
+    "raycast:build": "pnpm --dir packages/raycast-extension build",
+    "raycast:dev": "pnpm --dir packages/raycast-extension dev"
   },
   "devDependencies": {
     "@turbo/gen": "^1.9.7",
