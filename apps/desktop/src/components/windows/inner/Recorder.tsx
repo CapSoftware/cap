@@ -225,12 +225,21 @@ export const Recorder = () => {
             }
             case "stop-recording": {
               if (isRecording) {
-                handleStopAllRecordings();
+                handleStopAllRecordings().then((videoUrl) => {
+                  try {
+                    const shouldCopy = Boolean(params.get("copy_url"));
+                    if (shouldCopy) {
+                      window.navigator.clipboard.writeText(videoUrl);
+                    }
+                  } catch (error) {
+                    console.error("Invalid deep-link parameter: ", error);
+                  }
+                });
               }
               break;
             }
             case "open-dashboard": {
-              await openLinkInBrowser(`${process.env.NEXT_PUBLIC_URL}/dashboard`);
+              openLinkInBrowser(`${process.env.NEXT_PUBLIC_URL}/dashboard`);
               break;
             }
           }
@@ -320,6 +329,7 @@ export const Recorder = () => {
 
   const handleStopAllRecordings = async () => {
     setStoppingRecording(true);
+    let videoURL: string | null = null;
 
     try {
       tauriWindow.then(({ WebviewWindow }) => {
@@ -335,6 +345,8 @@ export const Recorder = () => {
     try {
       console.log("Stopping recordings...");
 
+      return "testUrl";
+
       try {
         await invoke("stop_all_recordings");
       } catch (error) {
@@ -349,7 +361,7 @@ export const Recorder = () => {
 
       console.log("Opening window...");
 
-      const url =
+      videoURL =
         process.env.NEXT_PUBLIC_ENVIRONMENT === "development"
           ? `${process.env.NEXT_PUBLIC_URL}/s/${await getLatestVideoId()}`
           : `https://cap.link/${await getLatestVideoId()}`;
@@ -361,7 +373,7 @@ export const Recorder = () => {
         !process.env.NEXT_PUBLIC_LOCAL_MODE ||
         process.env.NEXT_PUBLIC_LOCAL_MODE !== "true"
       ) {
-        await openLinkInBrowser(url);
+        await openLinkInBrowser(videoURL);
       }
 
       setIsRecording(false);
@@ -374,6 +386,8 @@ export const Recorder = () => {
 
     setIsRecording(false);
     setStoppingRecording(false);
+
+    return videoURL;
   };
 
   useEffect(() => {
