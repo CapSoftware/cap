@@ -302,7 +302,7 @@ fn main() {
 
             let app_handle = app.handle();
             if let Err(err) = tauri_plugin_deep_link::listen(move |request| {
-                if let Err(err) = app_handle.emit_all("deep-link-triggered", Some(request)) {
+                if let Err(err) = app_handle.emit_all("deep-link-request", Some(request)) {
                     eprintln!("Error while emitting deep-link event: {:?}", err);
                 }
             }) {

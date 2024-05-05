@@ -71,9 +71,9 @@ export const Recorder = () => {
       // if (isSelected(device)) {
       //   return
       // }
-      emit("change-device", { type: deviceKind, device: device }).catch(
+      emit("set-media-device", { type: deviceKind, device: device }).catch(
         (error) => {
-          console.log("Failed to emit change-device event:", error);
+          console.log("Failed to emit set-media-device event:", error);
         }
       );
     };
@@ -176,6 +176,77 @@ export const Recorder = () => {
       }
     };
   }, [isRecording]);
+
+  useEffect(() => {
+    let unlistenFn: UnlistenFn | null = null;
+
+    const setupListener = async () => {
+      unlistenFn = await listen<string>("deep-link-request", async (event) => {
+        // Likely running in Development. This gets triggered with an empty request on macOS.
+        // Read: [https://github.com/FabianLars/tauri-plugin-deep-link/tree/main?tab=readme-ov-file#macos]
+        if (!event.payload  || event.payload === "") {
+          return;
+        }
+        try {
+          const url = new URL(event.payload);
+          const command = url.hostname;
+          const params = url.searchParams;
+  
+          switch (command) {
+            case "start-recording": {
+              const micInLabel = params.get("mic_in_label");
+              const vidInLabel = params.get("vid_in_label");
+
+              const setDevice = (kind: "audioinput" | "videoinput", label: string) => {
+                let device: Device | null = null;
+                if (label !== "none") {
+                  const filtered = devices.filter(
+                    (device) => device.kind === kind && device.label === label
+                  );
+                  if (filtered.length !== 1) {
+                    throw new Error(`Unable to select device with label "${label}" from recieved command.`);
+                  }
+                  device = filtered[0]
+                }
+                return emit("set-media-device", { type: kind, device: device });
+              }
+              
+              if (micInLabel) {
+                await setDevice("audioinput", micInLabel);
+              }
+              if (vidInLabel) {
+                await setDevice("videoinput", vidInLabel);
+              }
+
+              if (!isRecording) {
+                handleStartAllRecordings();
+              }  
+              break;
+            }
+            case "stop-recording": {
+              if (isRecording) {
+                handleStopAllRecordings();
+              }
+              break;
+            }
+            case "open-dashboard": {
+              await openLinkInBrowser(`${process.env.NEXT_PUBLIC_URL}/dashboard`);
+              break;
+            }
+          }
+        } catch (error) {
+          console.error("Invalid deep-link URI: ", error);
+        }
+      });
+    }
+    setupListener();
+
+    return () => {
+      if (unlistenFn) {
+        unlistenFn();
+      }
+    };
+  }, [selectedVideoDevice, selectedAudioDevice]);
 
   const startDualRecording = async (videoData: {
     id: string;
