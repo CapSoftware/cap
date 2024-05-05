@@ -225,16 +225,7 @@ export const Recorder = () => {
             }
             case "stop-recording": {
               if (isRecording) {
-                handleStopAllRecordings().then((videoUrl) => {
-                  try {
-                    const shouldCopy = Boolean(params.get("copy_url"));
-                    if (shouldCopy) {
-                      window.navigator.clipboard.writeText(videoUrl);
-                    }
-                  } catch (error) {
-                    console.error("Invalid deep-link parameter: ", error);
-                  }
-                });
+                handleStopAllRecordings();
               }
               break;
             }
@@ -255,7 +246,7 @@ export const Recorder = () => {
         unlistenFn();
       }
     };
-  }, [selectedVideoDevice, selectedAudioDevice]);
+  }, [selectedVideoDevice, selectedAudioDevice, isRecording]);
 
   const startDualRecording = async (videoData: {
     id: string;
@@ -327,7 +318,7 @@ export const Recorder = () => {
     }
   };
 
-  const handleStopAllRecordings = async () => {
+  const handleStopAllRecordings = async (copyURL = true) => {
     setStoppingRecording(true);
     let videoURL: string | null = null;
 
@@ -344,8 +335,6 @@ export const Recorder = () => {
 
     try {
       console.log("Stopping recordings...");
-
-      return "testUrl";
 
       try {
         await invoke("stop_all_recordings");
@@ -373,6 +362,9 @@ export const Recorder = () => {
         !process.env.NEXT_PUBLIC_LOCAL_MODE ||
         process.env.NEXT_PUBLIC_LOCAL_MODE !== "true"
       ) {
+        if (copyURL) {
+          window.navigator.clipboard.writeText(videoURL);
+        }
         await openLinkInBrowser(videoURL);
       }
 
