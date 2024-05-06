@@ -1,3 +1,0 @@
-# Cap Recorder
-
-TODO
