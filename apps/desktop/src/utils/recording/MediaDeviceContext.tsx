@@ -158,14 +158,14 @@ export const MediaDeviceProvider: React.FC<React.PropsWithChildren<{}>> = ({
         unlistenFnChangeDevice = await listen<{
           type: string;
           device: Device | null;
-        }>("change-device", (event) => {
+        }>("set-media-device", (event) => {
           updateSelectedDevice(
             event.payload.type as DeviceKind,
             event.payload.device
           );
         });
       } catch (error) {
-        console.error("Error setting up change-device listener:", error);
+        console.error("Error setting up set-media-device listener:", error);
       }
 
       try {

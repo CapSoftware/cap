@@ -98,7 +98,7 @@ export const Camera = () => {
     if (typeof window === "undefined") return;
 
     tauriWindowImport.then(async ({ appWindow }) => {
-      await emit("change-device", {
+      await emit("set-media-device", {
         type: "video",
         device: {
           label: "None",
